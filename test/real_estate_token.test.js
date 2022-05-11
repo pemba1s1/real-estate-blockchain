@@ -16,7 +16,7 @@ contract("RealEstateToken", function (accounts) {
     token = await RealEstateToken.new(
       "TestToken",
       "TT",
-      100000,
+      90,
       1,
       1651823937,
       1751823937,
@@ -41,14 +41,14 @@ contract("RealEstateToken", function (accounts) {
     assert.equal(symbol, "TT");
   });
 
-  it("check if total supply is 100000*10**18", async function () {
+  it("check if total supply is 90*10**18", async function () {
     const totalSupply = await token.totalSupply();
-    assert.equal(totalSupply, 100000 * 10 ** 18);
+    assert.equal(totalSupply, 90 * 10 ** 18);
   });
 
   it("check if total supply if provided to owner", async function () {
     const ownerSupply = await token.balanceOf(accounts[1]);
-    assert.equal(ownerSupply, 100000 * 10 ** 18);
+    assert.equal(ownerSupply, 90 * 10 ** 18);
   });
 
   it("check if nft name is TestNft", async function () {
@@ -99,7 +99,7 @@ contract("RealEstateToken", function (accounts) {
   it("Check if error is thrown if token sent to null address", async () => {
     const nullAddress = "0x0000000000000000000000000000000000000000";
     await truffleAssert.reverts(
-      token.transfer(nullAddress, 1, { from: accounts[3] }),
+      token.transfer(nullAddress, 1, { from: accounts[1] }),
       "transfer to the zero address"
     );
   });
@@ -148,31 +148,94 @@ contract("RealEstateToken", function (accounts) {
 
   it("check if total supply is finished while purchasing", async () => {
     await truffleAssert.reverts(
-      token.purchase(1000000, 1661823937, { from: accounts[0] }),
+      token.purchase(1661823937, {
+        from: accounts[0],
+        value: "91000000000000000000",
+      }),
       "Total supply exceeded"
     );
   });
 
   it("check if buyer can purchase token", async () => {
     await truffleAssert.passes(
-      token.purchase(1, 1661823937, { from: accounts[5] })
+      token.purchase(1661823937, { from: accounts[5], value: 1 * 10 ** 18 })
     );
-    let balance = await token.balanceOf(accounts[5]);
-    console.log(balance.toString());
+    let balance = await token.getRecord(0);
     assert.equal(balance, 1 * 10 ** 18);
   });
 
   it("check if token sale hasnt started", async () => {
     await truffleAssert.reverts(
-      token.purchase(1, 1551823937, { from: accounts[0] }),
+      token.purchase(1551823937, { from: accounts[0], value: 1 * 10 ** 18 }),
       "Sale hasn't started yet"
     );
   });
 
   it("check if token sale has ended", async () => {
     await truffleAssert.reverts(
-      token.purchase(1, 2651823937, { from: accounts[0] }),
+      token.purchase(2651823937, { from: accounts[0], value: 1 * 10 ** 18 }),
       "Sale has ended"
+    );
+  });
+
+  it("should check that only owner can update sale start time", async () => {
+    await truffleAssert.reverts(
+      token.updateSaleStartTime(1661823937, { from: accounts[0] }),
+      "Need to be owner"
+    );
+  });
+
+  it("should check that only owner can update sale end time", async () => {
+    await truffleAssert.reverts(
+      token.updateSaleEndTime(1661823937, { from: accounts[0] }),
+      "Need to be owner"
+    );
+  });
+
+  it("should update sale start", async () => {
+    await token.updateSaleStartTime(1661823937, { from: accounts[1] });
+    const newSaleStartTime = await token.saleStart();
+    assert.equal(newSaleStartTime, 1661823937);
+  });
+
+  it("should update sale end", async () => {
+    await token.updateSaleEndTime(1771823937, { from: accounts[1] });
+    const newSaleStartTime = await token.saleEnd();
+    assert.equal(newSaleStartTime, 1771823937);
+  });
+
+  it("should check that only owner can Return token back to user", async () => {
+    await truffleAssert.reverts(
+      token.Return(accounts[0], { from: accounts[2] }),
+      "Need to be owner"
+    );
+  });
+
+  it("should check that only owner can issue property token", async () => {
+    await truffleAssert.reverts(
+      token.issue(1661823937, { from: accounts[2] }),
+      "Need to be owner"
+    );
+  });
+
+  it("should check that owner can issue property token only after sale has ended", async () => {
+    await truffleAssert.reverts(
+      token.issue(1661823937, { from: accounts[1] }),
+      "Sale hasn't ended"
+    );
+  });
+
+  it("should check that only owner can withdraw from smart contract", async () => {
+    await truffleAssert.reverts(
+      token.withdraw(1661823937, accounts[0], { from: accounts[2] }),
+      "Need to be owner"
+    );
+  });
+
+  it("should check that owner can withdraw from smart contract after sale has ended", async () => {
+    await truffleAssert.reverts(
+      token.withdraw(1661823937, accounts[0], { from: accounts[1] }),
+      "Sale hasn't ended"
     );
   });
 });

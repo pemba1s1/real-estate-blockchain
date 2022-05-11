@@ -19,6 +19,15 @@ contract RealEstateToken is ERC20Interface , Ownable {
   string private _nftName;
   string private _nftSymbol;
 
+  struct TokenRecord{
+    uint256 _amount;
+    address _buyerAddress;
+  }
+
+  TokenRecord[] public record;
+
+  event Received(address, uint);
+
   constructor(string memory tokenName_,string memory tokenSymbol_,uint256 totalSupply_,uint256 initialPrice_,uint256 saleStart_,uint256 saleEnd_,string memory nftName_,string memory nftSymbol_,address _owner) {
     owner = _owner;
     _tokenName = tokenName_;
@@ -31,6 +40,10 @@ contract RealEstateToken is ERC20Interface , Ownable {
     _nftName = nftName_;
     _nftSymbol = nftSymbol_;
     _balances[owner] = _totalSupply;
+  }
+
+  receive() external payable{
+    emit Received(msg.sender,msg.value);
   }
 
   function totalSupply() public view virtual override returns (uint256){
@@ -82,6 +95,11 @@ contract RealEstateToken is ERC20Interface , Ownable {
         return _balances[tokenOwner];
       }
 
+   function getRecord(uint _index) public virtual view returns(uint256){
+    require(_index<record.length,"Index out of bound");
+    return record[_index]._amount;
+  }
+
   function allowance(address tokenOwner, address spender)
       public
       view
@@ -95,8 +113,9 @@ contract RealEstateToken is ERC20Interface , Ownable {
       public
       virtual
       override
-      returns (bool success){
-        _transfer(msg.sender, _to, _amount);
+      returns (bool success){        
+      require(_balances[msg.sender]>=_amount,"Amount exceeds balance");
+        _transfer(msg.sender, _to, _amount*10**_decimals);
         return true;
       }
 
@@ -114,8 +133,10 @@ contract RealEstateToken is ERC20Interface , Ownable {
       address _to,
       uint256 _amount
   ) public virtual override returns (bool success){
+    
+    require(_balances[_from]>=_amount,"Amount exceeds balance");
     _spendAllowance(_from, msg.sender, _amount);
-    _transfer(_from, _to, _amount);
+    _transfer(_from, _to, _amount *10*_decimals);
     return true;
   }
 
@@ -130,42 +151,55 @@ contract RealEstateToken is ERC20Interface , Ownable {
     return true;
   }
 
-  function purchase(uint256 _amount,uint256 _time) public virtual returns(bool){
-        require(_amount* 10**_decimals<=_balances[owner],"Total supply exceeded");
-        require(_time>_saleStart,"Sale hasn't started yet");
-        require(_time<_saleEnd,"Sale has ended");
-        _transfer(owner, msg.sender, _amount);
-        return true;
+  function purchase(uint256 _time) public payable{
+        require(msg.value<=_balances[owner],"Total supply exceeded");
+        require(_time>=_saleStart,"Sale hasn't started yet");
+        require(_time<=_saleEnd,"Sale has ended");
+        require(msg.sender.balance>=msg.value ,"Not enough token to purchase");
+        unchecked {
+          _balances[owner] -= msg.value;
+        }
+        payable(address(this)).transfer(msg.value);
+        TokenRecord memory rec = TokenRecord(msg.value,msg.sender);
+        record.push(rec);
     }
 
-    // function withdraw(uint _amount) public onlyOwner{
-    //     require(block.timestamp<_saleEnd,"Sale hasn't ended");
+  function withdraw(uint256 _time,address payable _to) public virtual payable onlyOwner{
+      require(_time>_saleEnd,"Sale hasn't ended");
+      _to.transfer(address(this).balance);
+  }
 
-    // }
-    function issue() public onlyOwner{
+  function issue(uint256 _time) public virtual onlyOwner{
+    require(_time>=_saleEnd,"Sale hasn't ended");
+    uint i;
+    for(i=0;i<record.length;i++){
+      _transfer(msg.sender,record[i]._buyerAddress,record[i]._amount);
+    }
+    delete record;
+  }
 
-    }
-    function Return() public {
+  function Return(address payable _returnAddress) public payable onlyOwner returns(bool){
+    uint256 returnAmt = _findReturnAmount(_returnAddress);
+    require(address(this).balance>=returnAmt,"Not enough token to return");
+    _balances[owner] += returnAmt;
+    _returnAddress.transfer(returnAmt);
+    return true;
+  }
 
-    }
-    function updateSaleStartTime(uint256 updatedSaleStartTime) public onlyOwner{
-        _saleStart = updatedSaleStartTime;
-    }
-    function updateSaleEndTime(uint256 updatedSaleEndTime) public onlyOwner{
-        _saleEnd = updatedSaleEndTime;
-    }
+  function updateSaleStartTime(uint256 updatedSaleStartTime) public onlyOwner{
+      _saleStart = updatedSaleStartTime;
+  }
+  function updateSaleEndTime(uint256 updatedSaleEndTime) public onlyOwner{
+      _saleEnd = updatedSaleEndTime;
+  }
 
   function _transfer(address _from,address _to,uint256 _amount) internal virtual{
     require(_from != address(0),"transfer from the zero address");
     require(_to != address(0),"transfer to the zero address");
-    require(_balances[_from]>=_amount* 10**_decimals,"Amount exceeds balance");
 
-    unchecked {
-      _balances[_from] -= _amount* 10**_decimals;
-    }
-    _balances[_to] += _amount* 10**_decimals;
+    _balances[_to] += _amount;
 
-    emit Transfer(_from, _to, _amount* 10**_decimals);
+    emit Transfer(_from, _to, _amount);
 
   }
   function _approve(address _owner,address _spender,uint256 _amount) internal virtual{
@@ -187,5 +221,16 @@ contract RealEstateToken is ERC20Interface , Ownable {
     }
   }
 
+  function _findReturnAmount(address _address) internal virtual returns(uint256){
+    uint256 totalReturn=0 wei;
+    uint i;
+    for(i=0;i<record.length;i++){
+      if(_address==record[i]._buyerAddress){
+        totalReturn+=record[i]._amount;
+        record[i]._amount=0;
+      }
+    }
+    return totalReturn;
+  }
 
 }
