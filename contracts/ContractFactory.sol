@@ -8,6 +8,8 @@ contract ContractFactory is Ownable{
 
     event PropertyDeployed(string _tokenName,string _tokenSymbol);
 
+    address[] public propertyTokenAddress;
+
     function getOwner() public view returns(address){
         return owner;
     }
@@ -15,6 +17,7 @@ contract ContractFactory is Ownable{
     function deployProperty(string memory _tokenName,string memory _tokenSymbol,uint256 _totalSupply,uint256 _tokenInitialPrice,uint256 _saleStart,uint256 _saleEnd,string memory _nftName,string memory _nftSymbol,address _owner) public virtual returns(bool){
         token = new RealEstateToken(_tokenName,_tokenSymbol,_totalSupply,_tokenInitialPrice,_saleStart,_saleEnd,_nftName,_nftSymbol,_owner);
         emit PropertyDeployed(_tokenName, _tokenSymbol);
+        propertyTokenAddress.push(address(token));
         return true;
     }
 
