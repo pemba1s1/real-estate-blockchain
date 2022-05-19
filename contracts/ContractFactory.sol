@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 import "./RealEstateToken.sol";
-import "./Ownable.sol";
 
 contract ContractFactory is Ownable{
     RealEstateToken public token;
@@ -11,7 +10,7 @@ contract ContractFactory is Ownable{
     address[] public propertyTokenAddress;
 
     function getOwner() public view returns(address){
-        return owner;
+        return owner();
     }
 
     function deployProperty(string memory _tokenName,string memory _tokenSymbol,uint256 _totalSupply,uint256 _tokenInitialPrice,uint256 _saleStart,uint256 _saleEnd,string memory _nftName,string memory _nftSymbol,address _owner) public virtual returns(bool){

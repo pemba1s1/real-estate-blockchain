@@ -71,16 +71,6 @@ contract("RealEstateToken", function (accounts) {
     assert.equal(initialPrice, 1);
   });
 
-  it("check if saleStart is 1651823937", async function () {
-    const saleStart = await token.saleStart();
-    assert.equal(saleStart, 1651823937);
-  });
-
-  it("check if saleEnd is 1751823937", async function () {
-    const saleEnd = await token.saleEnd();
-    assert.equal(saleEnd, 1751823937);
-  });
-
   it("check if account without enough balace can transfer", async () => {
     await truffleAssert.reverts(
       token.transfer(accounts[0], 1, { from: accounts[3] }),
@@ -143,99 +133,6 @@ contract("RealEstateToken", function (accounts) {
     await truffleAssert.reverts(
       token.decreaseAllowance(accounts[0], 3, { from: accounts[1] }),
       "Allowance cannot be less than zero"
-    );
-  });
-
-  it("check if total supply is finished while purchasing", async () => {
-    await truffleAssert.reverts(
-      token.purchase(1661823937, {
-        from: accounts[0],
-        value: "91000000000000000000",
-      }),
-      "Total supply exceeded"
-    );
-  });
-
-  it("check if buyer can purchase token", async () => {
-    await truffleAssert.passes(
-      token.purchase(1661823937, { from: accounts[5], value: 1 * 10 ** 18 })
-    );
-    let balance = await token.getRecord(0);
-    assert.equal(balance, 1 * 10 ** 18);
-  });
-
-  it("check if token sale hasnt started", async () => {
-    await truffleAssert.reverts(
-      token.purchase(1551823937, { from: accounts[0], value: 1 * 10 ** 18 }),
-      "Sale hasn't started yet"
-    );
-  });
-
-  it("check if token sale has ended", async () => {
-    await truffleAssert.reverts(
-      token.purchase(2651823937, { from: accounts[0], value: 1 * 10 ** 18 }),
-      "Sale has ended"
-    );
-  });
-
-  it("should check that only owner can update sale start time", async () => {
-    await truffleAssert.reverts(
-      token.updateSaleStartTime(1661823937, { from: accounts[0] }),
-      "Need to be owner"
-    );
-  });
-
-  it("should check that only owner can update sale end time", async () => {
-    await truffleAssert.reverts(
-      token.updateSaleEndTime(1661823937, { from: accounts[0] }),
-      "Need to be owner"
-    );
-  });
-
-  it("should update sale start", async () => {
-    await token.updateSaleStartTime(1661823937, { from: accounts[1] });
-    const newSaleStartTime = await token.saleStart();
-    assert.equal(newSaleStartTime, 1661823937);
-  });
-
-  it("should update sale end", async () => {
-    await token.updateSaleEndTime(1771823937, { from: accounts[1] });
-    const newSaleStartTime = await token.saleEnd();
-    assert.equal(newSaleStartTime, 1771823937);
-  });
-
-  it("should check that only owner can Return token back to user", async () => {
-    await truffleAssert.reverts(
-      token.Return(accounts[0], { from: accounts[2] }),
-      "Need to be owner"
-    );
-  });
-
-  it("should check that only owner can issue property token", async () => {
-    await truffleAssert.reverts(
-      token.issue(1661823937, { from: accounts[2] }),
-      "Need to be owner"
-    );
-  });
-
-  it("should check that owner can issue property token only after sale has ended", async () => {
-    await truffleAssert.reverts(
-      token.issue(1661823937, { from: accounts[1] }),
-      "Sale hasn't ended"
-    );
-  });
-
-  it("should check that only owner can withdraw from smart contract", async () => {
-    await truffleAssert.reverts(
-      token.withdraw(1661823937, accounts[0], { from: accounts[2] }),
-      "Need to be owner"
-    );
-  });
-
-  it("should check that owner can withdraw from smart contract after sale has ended", async () => {
-    await truffleAssert.reverts(
-      token.withdraw(1661823937, accounts[0], { from: accounts[1] }),
-      "Sale hasn't ended"
     );
   });
 });
