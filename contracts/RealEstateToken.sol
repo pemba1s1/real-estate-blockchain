@@ -21,7 +21,7 @@ contract RealEstateToken is RealEstateTokenInterface , Ownable  {
 
   event Received(address, uint);
 
-  constructor(string memory tokenName_,string memory tokenSymbol_,uint256 maxSupply_,uint256 initialPrice_,uint256 saleStart_,uint256 saleEnd_,string memory nftName_,string memory nftSymbol_,address _owner) {
+  constructor(address usdc,string memory tokenName_,string memory tokenSymbol_,uint256 maxSupply_,uint256 initialPrice_,uint256 saleStart_,uint256 saleEnd_,string memory nftName_,string memory nftSymbol_,address _owner) {
     _transferOwnership(_owner);
     _tokenName = tokenName_;
     _decimals = 18;
@@ -31,8 +31,7 @@ contract RealEstateToken is RealEstateTokenInterface , Ownable  {
     _nftName = nftName_;
     _nftSymbol = nftSymbol_;
     _totalSupply = 0;
-    TokenSale ts = new TokenSale(_owner,address(this),saleStart_,saleEnd_,address(0x688B392503481Ed1089aC87B9bBbc20B436408c3
-));
+    TokenSale ts = new TokenSale(_owner,address(this),saleStart_,saleEnd_,usdc);
     _saleAddress = address(ts);
   }
 

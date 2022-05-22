@@ -13,8 +13,8 @@ contract ContractFactory is Ownable{
         return owner();
     }
 
-    function deployProperty(string memory _tokenName,string memory _tokenSymbol,uint256 _totalSupply,uint256 _tokenInitialPrice,uint256 _saleStart,uint256 _saleEnd,string memory _nftName,string memory _nftSymbol,address _owner) public virtual returns(bool){
-        token = new RealEstateToken(_tokenName,_tokenSymbol,_totalSupply,_tokenInitialPrice,_saleStart,_saleEnd,_nftName,_nftSymbol,_owner);
+    function deployProperty(address usdc,string memory _tokenName,string memory _tokenSymbol,uint256 _totalSupply,uint256 _tokenInitialPrice,uint256 _saleStart,uint256 _saleEnd,string memory _nftName,string memory _nftSymbol,address _owner) public virtual returns(bool){
+        token = new RealEstateToken(usdc,_tokenName,_tokenSymbol,_totalSupply,_tokenInitialPrice,_saleStart,_saleEnd,_nftName,_nftSymbol,_owner);
         emit PropertyDeployed(_tokenName, _tokenSymbol);
         propertyTokenAddress.push(address(token));
         return true;

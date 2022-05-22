@@ -1,6 +1,7 @@
 const truffleAssert = require("truffle-assertions");
 const timeMachine = require("ganache-time-traveler");
 const { assert } = require("chai");
+const BN = require("bn.js");
 
 const RealEstateToken = artifacts.require("./RealEstateToken");
 const USDC = artifacts.require("./Usdc.sol");
@@ -13,8 +14,9 @@ contract("ContractFactory", function (accounts) {
   let sale;
 
   before(async () => {
-    usdc = await USDC.deployed();
+    usdc = await USDC.new();
     token = await RealEstateToken.new(
+      usdc.address,
       "TestToken",
       "TT",
       90,
@@ -52,13 +54,9 @@ contract("ContractFactory", function (accounts) {
     it("check if buyer can purchase token", async () => {
       await timeMachine.advanceBlockAndSetTime(1661823937);
       await usdc.approve(saleAddress, 20, { from: accounts[0] });
-      console.log((await usdc.allowance(accounts[0], saleAddress)).toString());
-      console.log((20 * 10 ** 18).toString());
-      console.log(await usdc.owner());
-      console.log(await saleAddress);
       await sale.purchase(20, { from: accounts[0] });
-      // let balance = await usdc.balanceOf(token.address);
-      // assert.equal(balance, 20 * 10 ** 18);
+      let balance = await usdc.balanceOf(saleAddress);
+      assert.equal(balance, 20 * 10 ** 18);
     });
 
     it("check if token sale hasnt started", async () => {
@@ -119,6 +117,40 @@ contract("ContractFactory", function (accounts) {
     });
   });
 
+  describe("should check Return function", async () => {
+    it("should check if smart contract has enough token to return", async () => {
+      await timeMachine.advanceBlockAndSetTime(1852848590);
+      await truffleAssert.reverts(
+        sale.Return(100000000, { from: accounts[0] }),
+        "Not enough token to return"
+      );
+    });
+
+    it("should check if user has enough token to return", async () => {
+      await timeMachine.advanceBlockAndSetTime(1852848590);
+      await truffleAssert.reverts(
+        sale.Return(1, { from: accounts[5] }),
+        "You dont have enought token to return"
+      );
+    });
+
+    it("should check if record decreases and the balance of user increases", async () => {
+      let recordAmt = await sale.getRecord(accounts[0]);
+      let balance = await usdc.balanceOf(accounts[0]);
+      await truffleAssert.passes(sale.Return(10, { from: accounts[0] }));
+      let recordAmtAfterReturn = await sale.getRecord(accounts[0]);
+      let balanceAfterReturn = await usdc.balanceOf(accounts[0]);
+      assert.equal(
+        recordAmt.sub(new BN("10000000000000000000", 10)).toString(),
+        recordAmtAfterReturn.toString()
+      );
+      assert.equal(
+        balance.add(new BN("10000000000000000000", 10)).toString(),
+        balanceAfterReturn.toString()
+      );
+    });
+  });
+
   describe("should check claim function", async () => {
     it("should not allow user to claim their token before sale has ended", async () => {
       await timeMachine.advanceBlockAndSetTime(1552848590);
@@ -131,12 +163,10 @@ contract("ContractFactory", function (accounts) {
     it("should allow user to claim their token after sale has ended", async () => {
       await timeMachine.advanceBlockAndSetTime(1852848590);
       await truffleAssert.passes(sale.claim({ from: accounts[0] }));
-      let balance = token.balanceOf(accounts[0]);
-      let remaining = sale.getRecord(accounts[0]);
-      console.log(remaining);
-      console.log(balance);
+      let balance = await token.balanceOf(accounts[0]);
+      let remaining = await sale.getRecord(accounts[0]);
       assert.equal(remaining, 0);
-      assert.equal(balance, 20 * 10 ** 18);
+      assert.equal(balance, 10 * 10 ** 18);
     });
   });
 
@@ -162,40 +192,8 @@ contract("ContractFactory", function (accounts) {
       await truffleAssert.passes(
         sale.withdraw(accounts[2], { from: accounts[1] })
       );
-      let balance = usdc.balanceOf(accounts[2]);
-      console.log(balance);
-      assert.equal(balance, 20 * 10 ** 18);
-    });
-  });
-
-  describe("should check Return function", async () => {
-    it("should check if smart contract has enough token to return", async () => {
-      await timeMachine.advanceBlockAndSetTime(1852848590);
-      await truffleAssert.reverts(
-        sale.Return(100000000, { from: accounts[0] }),
-        "Not enough token to return"
-      );
-    });
-
-    it("should check if user has enough token to return", async () => {
-      await timeMachine.advanceBlockAndSetTime(1852848590);
-      await truffleAssert.reverts(
-        sale.Return(1, { from: accounts[5] }),
-        "You dont have enought token to return"
-      );
-    });
-
-    it("should check if record decreases and the balance of user increases", async () => {
-      await timeMachine.advanceBlockAndSetTime(1852848590);
-      await usdc.approve(saleAddress, 20, { from: accounts[0] });
-      await sale.purchase(20, { from: accounts[0] });
-      let recordAmt = await sale.getRecord(accounts[0]);
-      let balance = await usdc.balanceOf(accounts[0]);
-      await truffleAssert.passes(sale.Return(10, { from: accounts[0] }));
-      let recordAmtAfterReturn = await sale.getRecord(accounts[0]);
-      let balanceAfterReturn = await usdc.balanceOf(accounts[0]);
-      assert.equal(recordAmt - 10 * 10 ** 18, recordAmtAfterReturn);
-      assert.equal(balance + 10 * 10 ** 18, balanceAfterReturn);
+      let balance = await usdc.balanceOf(accounts[2]);
+      assert.equal(balance, 10 * 10 ** 18);
     });
   });
 });

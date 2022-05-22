@@ -40,6 +40,10 @@ contract TokenSale is Ownable{
     return IERC20(_usdcInstance).balanceOf(add);
   }
 
+  function allowance(address owner,address spender) public view returns (uint256){
+    return IERC20(_usdcInstance).allowance(owner, spender);
+  }
+
   function saleEnd() public view virtual returns (uint256) {
       return _saleEnd;
   }
