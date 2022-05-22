@@ -16,6 +16,7 @@ contract("ContractFactory", function (accounts) {
   it("should deploy real estate token contract", async () => {
     await truffleAssertions.passes(
       contractFactory.deployProperty(
+        "0x688B392503481Ed1089aC87B9bBbc20B436408c3",
         "TestToken",
         "TT",
         100000,
@@ -28,9 +29,11 @@ contract("ContractFactory", function (accounts) {
       )
     );
   });
+
   it("should not deploy real estate token contract", async () => {
     await truffleAssertions.fails(
       contractFactory.deployProperty(
+        "0x688B392503481Ed1089aC87B9bBbc20B436408c3",
         "TestToken",
         "TT",
         100000,
