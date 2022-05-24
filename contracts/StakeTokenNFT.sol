@@ -5,11 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract StakeTokenNFT is Ownable{
 
-    constructor(address owner_,address tokenAddress_,uint256 rewardPerToken_,){
-         _transferOwnership(_owner);
+    constructor(address owner_){
+         _transferOwnership(owner_);
     }
 
-    function stake(uint256 _amount) public returns(bool){
-
-    }
 }
