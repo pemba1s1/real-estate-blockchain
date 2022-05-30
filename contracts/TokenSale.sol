@@ -56,7 +56,7 @@ contract TokenSale is Ownable{
       require(block.timestamp>=_saleStart,"Sale hasn't started yet");
       require(block.timestamp<=_saleEnd,"Sale has ended");
       IERC20(_usdcInstance).safeTransferFrom(msg.sender,address(this), _amount);
-      record[msg.sender] += _amount*10**18;
+      record[msg.sender] += _amount;
   }
 
   function withdraw(address _to) public virtual onlyOwner{
@@ -72,11 +72,11 @@ contract TokenSale is Ownable{
   }
 
   function Return(uint256 _amount) public returns(bool){
-    require(IERC20(_usdcInstance).balanceOf(address(this))>=_amount*10**18,"Not enough token to return");
-    require(record[msg.sender]>=_amount*10**18,"You dont have enought token to return");
+    require(IERC20(_usdcInstance).balanceOf(address(this))>=_amount,"Not enough token to return");
+    require(record[msg.sender]>=_amount,"You dont have enought token to return");
     // _tokenAddress._balances[owner] += returnAmt;
-    IERC20(_usdcInstance).safeTransfer(msg.sender,_amount*10**18);
-    record[msg.sender] -= _amount*10**18;
+    IERC20(_usdcInstance).safeTransfer(msg.sender,_amount);
+    record[msg.sender] -= _amount;
     return true;
   }
 

@@ -3,17 +3,20 @@ const timeMachine = require("ganache-time-traveler");
 const { assert } = require("chai");
 const BN = require("bn.js");
 
+// const ContractFactory = artifacts.require("./ContractFactory");
 const RealEstateToken = artifacts.require("./RealEstateToken");
 const USDC = artifacts.require("./Usdc.sol");
 const TokenSale = artifacts.require("./TokenSale.sol");
 
-contract("ContractFactory", function (accounts) {
+contract("Token Sale", function (accounts) {
+  // let contractFacory;
   let usdc;
   let token;
   let saleAddress;
   let sale;
 
   before(async () => {
+    // contractFacory = await ContractFactory.new();
     usdc = await USDC.new();
     token = await RealEstateToken.new(
       usdc.address,
@@ -46,7 +49,7 @@ contract("ContractFactory", function (accounts) {
       await timeMachine.advanceBlockAndSetTime(1652848590);
       await usdc.approve(saleAddress, 91, { from: accounts[0] });
       await truffleAssert.reverts(
-        sale.purchase(150000, { from: accounts[0] }),
+        sale.purchase("150000000000000000000000000000", { from: accounts[0] }),
         "Amount exceeds balance"
       );
     });
@@ -56,7 +59,7 @@ contract("ContractFactory", function (accounts) {
       await usdc.approve(saleAddress, 20, { from: accounts[0] });
       await sale.purchase(20, { from: accounts[0] });
       let balance = await usdc.balanceOf(saleAddress);
-      assert.equal(balance, 20 * 10 ** 18);
+      assert.equal(balance, 20);
     });
 
     it("check if token sale hasnt started", async () => {
@@ -141,11 +144,11 @@ contract("ContractFactory", function (accounts) {
       let recordAmtAfterReturn = await sale.getRecord(accounts[0]);
       let balanceAfterReturn = await usdc.balanceOf(accounts[0]);
       assert.equal(
-        recordAmt.sub(new BN("10000000000000000000", 10)).toString(),
+        recordAmt.sub(new BN("10", 10)).toString(),
         recordAmtAfterReturn.toString()
       );
       assert.equal(
-        balance.add(new BN("10000000000000000000", 10)).toString(),
+        balance.add(new BN("10", 10)).toString(),
         balanceAfterReturn.toString()
       );
     });
@@ -166,7 +169,7 @@ contract("ContractFactory", function (accounts) {
       let balance = await token.balanceOf(accounts[0]);
       let remaining = await sale.getRecord(accounts[0]);
       assert.equal(remaining, 0);
-      assert.equal(balance, 10 * 10 ** 18);
+      assert.equal(balance, 10);
     });
   });
 
@@ -193,7 +196,7 @@ contract("ContractFactory", function (accounts) {
         sale.withdraw(accounts[2], { from: accounts[1] })
       );
       let balance = await usdc.balanceOf(accounts[2]);
-      assert.equal(balance, 10 * 10 ** 18);
+      assert.equal(balance, 10 );
     });
   });
 });

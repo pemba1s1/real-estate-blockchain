@@ -73,7 +73,7 @@ contract USDC is IERC20 , Ownable  {
       virtual
       override
       returns (bool){
-        _approve(msg.sender, _spender, _amount* 10**_decimals);
+        _approve(msg.sender, _spender, _amount);
         return true;
       }
 
@@ -83,21 +83,21 @@ contract USDC is IERC20 , Ownable  {
       uint256 _amount
   ) public virtual override returns (bool success){
     
-    require(_balances[_from]>=_amount*10**_decimals,"Amount exceeds balance");
+    require(_balances[_from]>=_amount,"Amount exceeds balance");
     // uint adsd = _amount*10**_decimals;
     _spendAllowance(_from, msg.sender, _amount);
-    _transfer(_from, _to, _amount *10**_decimals);
+    _transfer(_from, _to, _amount );
     return true;
   }
 
   function increaseAllowance(address _spender,uint256 _amount) public virtual returns(bool){
-    _approve(msg.sender, _spender, allowance(msg.sender,_spender)+_amount * 10**_decimals);
+    _approve(msg.sender, _spender, allowance(msg.sender,_spender)+_amount);
     return true;
   }
 
   function decreaseAllowance(address _spender,uint256 _amount) public virtual returns(bool){
-    require(allowance(msg.sender, _spender)>=_amount* 10**_decimals,"Allowance cannot be less than zero");
-    _approve(msg.sender, _spender, allowance(msg.sender,_spender)-_amount * 10**_decimals);
+    require(allowance(msg.sender, _spender)>=_amount,"Allowance cannot be less than zero");
+    _approve(msg.sender, _spender, allowance(msg.sender,_spender)-_amount);
     return true;
   }
 
@@ -124,9 +124,9 @@ contract USDC is IERC20 , Ownable  {
   function _spendAllowance(address _owner,address _spender,uint256 _amount) internal virtual{
     require(_owner != address(0),"cannot spend allownace from address 0");
     require(_spender != address(0),"cannot spend allownace to address 0");
-    require(allowance(_owner,_spender)>=_amount* 10**_decimals,"not enough token allowed");
+    require(allowance(_owner,_spender)>=_amount,"not enough token allowed");
     unchecked {
-      _allowances[_owner][_spender] -= _amount* 10**_decimals;      
+      _allowances[_owner][_spender] -= _amount;      
     }
   }
 
