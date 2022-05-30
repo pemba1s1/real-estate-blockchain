@@ -136,6 +136,7 @@ contract("Staking Contract",async(accounts)=>{
         let totalStakeBeforeWithdraw = await stake.totalStaked();
         let stakedAmountBeforeWithdraw = await stake.balanceOf(accounts[0],1);
         let tokenBalanceBeforeWithdraw = await token.balanceOf(accounts[0]);
+        await timeMachine.advanceBlockAndSetTime(1852859590);
         await truffleAssert.passes(stake.withdraw(1,1,"USDC"));
         let totalStakeAfterWithdraw = await stake.totalStaked();
         let stakedAmountAfterWithdraw = await stake.balanceOf(accounts[0],1);        
@@ -145,13 +146,13 @@ contract("Staking Contract",async(accounts)=>{
         assert.equal(totalStakeBeforeWithdraw.sub(new BN(1,10)).toString(),totalStakeAfterWithdraw);
         assert.equal(stakedAmountBeforeWithdraw.sub(new BN(1,10)).toString(),stakedAmountAfterWithdraw);
         assert.equal(tokenBalanceBeforeWithdraw.add(new BN(1,10)).toString(),tokenBalanceAfterWithdraw);
-        
       })
 
       it("should withdraw all of the staked token",async()=>{
         let totalStakeBeforeWithdraw = await stake.totalStaked();
         let stakedAmountBeforeWithdraw = await stake.balanceOf(accounts[0],1);
         let tokenBalanceBeforeWithdraw = await token.balanceOf(accounts[0]);
+        await timeMachine.advanceBlockAndSetTime(1852859690);
         await truffleAssert.passes(stake.withdraw(1,1,"USDC"));
         let totalStakeAfterWithdraw = await stake.totalStaked();
         let stakedAmountAfterWithdraw = await stake.balanceOf(accounts[0],1);        
@@ -160,7 +161,6 @@ contract("Staking Contract",async(accounts)=>{
         assert.equal(totalStakeBeforeWithdraw.sub(new BN(1,10)).toString(),totalStakeAfterWithdraw);
         assert.equal(stakedAmountBeforeWithdraw.sub(new BN(1,10)).toString(),stakedAmountAfterWithdraw);
         assert.equal(tokenBalanceBeforeWithdraw.add(new BN(1,10)).toString(),tokenBalanceAfterWithdraw);
-        
       })
 
     })

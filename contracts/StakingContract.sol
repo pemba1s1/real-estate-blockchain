@@ -128,6 +128,7 @@ contract StakingContract is Ownable , ReentrancyGuard{
             depositDates[sender][id] = 0;
             delete nftId[sender][id];
         }else{
+            depositDates[sender][id] = block.timestamp;
             uint256 tokenId = _issue(sender);
             nftId[sender][id] = tokenId;
         }
