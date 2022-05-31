@@ -26,7 +26,7 @@ contract StakingContract is Ownable , ReentrancyGuard{
 
     uint256 private _totalStaked;
 
-    event Deposited(address indexed sender, uint256 amount, uint256 id ,string depositTokenType);
+    event Staked(address indexed sender, uint256 amount, uint256 id );
     event Withdrawn(address indexed sender, uint256 amount, uint256 id);
     event RewardSet(uint256 rewardPerToken, address sender);
     event RewardWithdrawn(address indexed sender, uint256 reward,string rewardTokenType);
@@ -158,6 +158,7 @@ contract StakingContract is Ownable , ReentrancyGuard{
         IERC20(tokenAddress).safeTransferFrom(to,address(this),amount);
         uint256 tokenId = _issue(to);
         nftId[msg.sender][_depositId] = tokenId;
+        emit Staked(msg.sender, amount, _depositId);
     }  
 
     function _issue(address to_) internal returns(uint256){
