@@ -3,8 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./TokenSale.sol";
 import "./RealEstateTokenInterface.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract RealEstateToken is RealEstateTokenInterface , Ownable  {
+contract RealEstateToken is RealEstateTokenInterface , Ownable , Initializable  {
 
   mapping(address => uint256) _balances;
   mapping(address =>mapping(address=>uint256)) _allowances;
@@ -15,26 +17,27 @@ contract RealEstateToken is RealEstateTokenInterface , Ownable  {
   uint256 private _maxSupply;
   uint256 private _totalSupply;
   uint256 private _initialPrice;
-  string private _nftName;
-  string private _nftSymbol;
   address private _saleAddress;
+  address private _implementationAddressSale;
 
   event Received(address, uint);
 
-  constructor(address usdc,string memory tokenName_,string memory tokenSymbol_,uint256 maxSupply_,uint256 initialPrice_,uint256 saleStart_,uint256 saleEnd_,string memory nftName_,string memory nftSymbol_,address _owner) {
+  function initialize (address usdc_,string memory tokenName_,string memory tokenSymbol_,uint256 maxSupply_,uint256 initialPrice_,uint256 saleStart_,uint256 saleEnd_,address _owner) public initializer{
     _transferOwnership(_owner);
     _tokenName = tokenName_;
     _decimals = 18;
     _tokenSymbol = tokenSymbol_;
     _maxSupply = maxSupply_ * 10**_decimals;
     _initialPrice = initialPrice_;
-    _nftName = nftName_;
-    _nftSymbol = nftSymbol_;
     _totalSupply = 0;
-    TokenSale ts = new TokenSale(_owner,address(this),saleStart_,saleEnd_,usdc);
+    TokenSale ts = TokenSale(Clones.clone(_implementationAddressSale));
+    ts.initialize(_owner,saleStart_,saleEnd_,usdc_);
     _saleAddress = address(ts);
   }
 
+  function setSaleCloneAddress(address implementationAddressSale_) public{
+    _implementationAddressSale=implementationAddressSale_;
+  }
 
   function totalSupply() public view virtual override returns (uint256){
     return _totalSupply;
@@ -58,14 +61,6 @@ contract RealEstateToken is RealEstateTokenInterface , Ownable  {
 
   function symbol() public view virtual returns (string memory){
     return _tokenSymbol;
-  }
-
-  function nftName() public view virtual returns(string memory){
-    return _nftName;
-  }
-
-  function nftSymbol() public view virtual returns(string memory){
-    return _nftSymbol;
   }
 
   function initialPrice() public view virtual returns (uint256) {

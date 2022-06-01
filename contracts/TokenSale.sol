@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./RealEstateTokenInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract TokenSale is Ownable{
+contract TokenSale is Ownable , Initializable{
   using SafeERC20 for IERC20;
   address private _tokenAddress;
   uint256 private _saleStart;
@@ -16,10 +17,10 @@ contract TokenSale is Ownable{
   
   mapping(address => uint256) record;
 
-  constructor(address _owner,address tokenAddress_,uint256 saleStart_,uint256 saleEnd_,address usdcAddress_){
+  function initialize(address _owner,uint256 saleStart_,uint256 saleEnd_,address usdcAddress_) public initializer{
     _transferOwnership(_owner);
     _usdcInstance = usdcAddress_;
-    _tokenAddress = tokenAddress_;
+    _tokenAddress = msg.sender;
     _saleStart = saleStart_;
     _saleEnd = saleEnd_;
   }  

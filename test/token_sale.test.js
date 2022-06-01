@@ -3,22 +3,26 @@ const timeMachine = require("ganache-time-traveler");
 const { assert } = require("chai");
 const BN = require("bn.js");
 
-// const ContractFactory = artifacts.require("./ContractFactory");
+const ContractFactory = artifacts.require("./ContractFactory");
 const RealEstateToken = artifacts.require("./RealEstateToken");
 const USDC = artifacts.require("./Usdc.sol");
 const TokenSale = artifacts.require("./TokenSale.sol");
 
 contract("Token Sale", function (accounts) {
-  // let contractFacory;
+  let contractFactory;
+  let tokenAddress;
   let usdc;
   let token;
   let saleAddress;
   let sale;
 
   before(async () => {
-    // contractFacory = await ContractFactory.new();
+    let a = await RealEstateToken.new();
+    let b = await TokenSale.new();
+    contractFactory = await ContractFactory.new(a.address,"0x1875c4Fa5EC8712eB388f8f40a099401dBF320DA");
     usdc = await USDC.new();
-    token = await RealEstateToken.new(
+    await contractFactory.deployProperty(
+      b.address,
       usdc.address,
       "TestToken",
       "TT",
@@ -26,10 +30,10 @@ contract("Token Sale", function (accounts) {
       1,
       1652848590,
       1753848590,
-      "TestNft",
-      "TN",
       accounts[1]
     );
+    tokenAddress = await contractFactory.getTokenAddress("TestToken");
+    token = await RealEstateToken.at(tokenAddress);
     saleAddress = await token.saleAddress();
     sale = await TokenSale.at(saleAddress);
   });

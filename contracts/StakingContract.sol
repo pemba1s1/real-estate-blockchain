@@ -8,8 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract StakingContract is Ownable , ReentrancyGuard{
+contract StakingContract is Ownable , ReentrancyGuard, Initializable{
 
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -25,21 +27,28 @@ contract StakingContract is Ownable , ReentrancyGuard{
     mapping(address => uint256) lastDepositIds;
 
     uint256 private _totalStaked;
+    address private _implementationAddressNFT;
 
     event Staked(address indexed sender, uint256 amount, uint256 id );
     event Withdrawn(address indexed sender, uint256 amount, uint256 id);
     event RewardSet(uint256 rewardPerToken, address sender);
     event RewardWithdrawn(address indexed sender, uint256 reward,string rewardTokenType);
 
-    constructor(address owner_, address tokenAddress_,address usdc_,address bloq_,uint256 rewardPerTokenUSDC_,uint256 rewardPerTokenBLOQ_,string memory nftName_,string memory nftSymbol_ ){
-        transferOwnership(owner_);
+    function initialize(address owner_, address tokenAddress_,address usdc_,address bloq_,uint256 rewardPerTokenUSDC_,uint256 rewardPerTokenBLOQ_,string memory nftName_,string memory nftSymbol_) public initializer{
+        _transferOwnership(owner_);
         _tokenAddress = tokenAddress_;
         rewardTokenAddress["USDC"] = usdc_;
         rewardTokenAddress["BLOQ"] = bloq_;
         rewardPerToken["USDC"] = rewardPerTokenUSDC_;
-        rewardPerToken["BLOQ"] = rewardPerTokenBLOQ_;
-        nft = new StakeTokenNFT(nftName_,nftSymbol_);
+        rewardPerToken["BLOQ"] = rewardPerTokenBLOQ_;        
+        nft = StakeTokenNFT(Clones.clone(_implementationAddressNFT));
+        nft.initialize(nftName_,nftSymbol_);
         _totalStaked = 0;
+    }
+   
+
+    function setNFTCloneAddress(address implementationAddressNFT_) public{
+        _implementationAddressNFT=implementationAddressNFT_;
     }
 
     function nftAddress() public view returns(address){

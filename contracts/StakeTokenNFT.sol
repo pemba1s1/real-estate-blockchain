@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./TokenNftInterface.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract StakeTokenNFT is  Ownable , TokenNftInterface  {
+contract StakeTokenNFT is  Ownable , TokenNftInterface , Initializable  {
     
     using Counters for Counters.Counter;
     using Address for address;
@@ -27,7 +28,8 @@ contract StakeTokenNFT is  Ownable , TokenNftInterface  {
     // Mapping owner address to token count
     mapping(address => uint256) private _balances;
 
-    constructor(string memory name_, string memory symbol_) {
+    function initialize(string memory name_, string memory symbol_) public initializer {
+        _transferOwnership(msg.sender);
         _name = name_;
         _symbol = symbol_;
     }

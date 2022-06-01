@@ -2,6 +2,7 @@ const { assert } = require("chai");
 const truffleAssert = require("truffle-assertions");
 
 const RealEstateToken = artifacts.require("./RealEstateToken.sol");
+const ContractFactory = artifacts.require("./ContractFactory.sol");
 
 require("chai").use(require("chai-as-promised")).should();
 
@@ -12,19 +13,24 @@ require("chai").use(require("chai-as-promised")).should();
  */
 contract("RealEstateToken", function (accounts) {
   let token;
+  let tokenAddress;
+  let contractFactory;
   before(async () => {
-    token = await RealEstateToken.new(
-      "0x688B392503481Ed1089aC87B9bBbc20B436408c3",
+    let a = await RealEstateToken.new();
+    contractFactory = await ContractFactory.new(a.address,"0x1875c4Fa5EC8712eB388f8f40a099401dBF320DA");
+    await contractFactory.deployProperty(
+      "0x7694d00ba4084feefC9f1F54F47Bb63afc0820E0",
+      "0x4469e89a0E2aE7DB54Ca6Ff064C0a4C78917e1df",
       "TestToken",
       "TT",
       90,
       1,
-      1651823937,
-      1751823937,
-      "TestNft",
-      "TN",
+      1652848590,
+      1753848590,
       accounts[1]
     );
+    tokenAddress = await contractFactory.getTokenAddress("TestToken");
+    token = await RealEstateToken.at(tokenAddress);
   });
 
   describe("Check token basic info", async () => {
@@ -41,16 +47,6 @@ contract("RealEstateToken", function (accounts) {
     it("check if max supply is 90*10**18", async function () {
       const totalSupply = await token.maxSupply();
       assert.equal(totalSupply, 90 * 10 ** 18);
-    });
-
-    it("check if nft name is TestNft", async function () {
-      const name = await token.nftName();
-      assert.equal(name, "TestNft");
-    });
-
-    it("check if nft symbol is TN", async function () {
-      const symbol = await token.nftSymbol();
-      assert.equal(symbol, "TN");
     });
 
     it("check if decimals is 18", async function () {
@@ -108,7 +104,7 @@ contract("RealEstateToken", function (accounts) {
         token.transfer(accounts[0], 1, { from: accounts[1] })
       );
       const balance = await token.balanceOf(accounts[0]);
-      assert.equal(balance, 1 * 10 ** 18);
+      assert.equal(balance, 1);
     });
 
     it("Check if error is thrown if token transfered to null address", async () => {
@@ -139,7 +135,7 @@ contract("RealEstateToken", function (accounts) {
         token.approve(accounts[0], 1, { from: accounts[1] })
       );
       const balance = await token.allowance(accounts[1], accounts[0]);
-      assert.equal(balance, 1 * 10 ** 18);
+      assert.equal(balance, 1);
     });
 
     it("Check if error is thrown if negative value to allowance is given", async () => {
